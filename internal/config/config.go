@@ -11,11 +11,11 @@ type Config struct {
 	ServerPort  string
 }
 
-// LoadConfig carrega as variáveis de ambiente
+// LoadConfig loads environment variables
 func LoadConfig() (*Config, error) {
 	err := godotenv.Load()
 	if err != nil {
-		log.Printf("Erro ao carregar o .env: %v", err)
+		log.Printf("Error loading .env file: %v", err)
 	}
 
 	return &Config{
@@ -24,7 +24,7 @@ func LoadConfig() (*Config, error) {
 	}, nil
 }
 
-// getEnv busca a variável de ambiente ou retorna o valor padrão
+// getEnv searches for the environment variable or returns the default value
 func getEnv(key, defaultValue string) string {
 	value := os.Getenv(key)
 	if value == "" {

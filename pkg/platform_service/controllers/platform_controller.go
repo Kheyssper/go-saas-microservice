@@ -10,39 +10,39 @@ import (
 	"github.com/kheyssper/go-saas-microservice/pkg/platform_service/services"
 )
 
-// PlatformController lida com as requisições HTTP relacionadas às plataformas.
+// PlatformController handles HTTP requests related to platforms.
 type PlatformController struct {
 	service *services.PlatformService
 }
 
-// NewPlatformController cria uma nova instância de PlatformController.
+// NewPlatformController creates a new instance of PlatformController.
 func NewPlatformController(service *services.PlatformService) *PlatformController {
 	return &PlatformController{service: service}
 }
 
-// CreatePlatformHandler trata a criação de uma nova plataforma.
+// CreatePlatformHandler handles creating a new platform.
 func (c *PlatformController) CreatePlatformHandler(w http.ResponseWriter, r *http.Request) {
 	var platform models.Platform
 
-	// Decodifica o corpo da requisição diretamente para o struct Platform
+	// Decode the request body directly into the Platform struct
 	if err := json.NewDecoder(r.Body).Decode(&platform); err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
 
-	// Chama o serviço para criar a plataforma
+	// Call the service to create the platform
 	newPlatform, err := c.service.CreatePlatform(r.Context(), platform.PlatformName, platform.PlatformSlug, platform.CreatorID)
 	if err != nil {
 		http.Error(w, "Failed to create platform", http.StatusInternalServerError)
 		return
 	}
 
-	// Retorna a resposta em JSON
+	// Return the JSON response
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(newPlatform)
 }
 
-// ListPlatformsHandler lida com a listagem de todas as plataformas.
+// ListPlatformsHandler handles listing all platforms.
 func (c *PlatformController) ListPlatformsHandler(w http.ResponseWriter, r *http.Request) {
 	platforms, err := c.service.ListPlatforms(r.Context())
 	if err != nil {
@@ -50,12 +50,12 @@ func (c *PlatformController) ListPlatformsHandler(w http.ResponseWriter, r *http
 		return
 	}
 
-	// Retorna as plataformas em JSON
+	// Return platforms in JSON format
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(platforms)
 }
 
-// RunOrStopPlatformHandler lida com a atualização do status da plataforma (executar ou parar).
+// RunOrStopPlatformHandler handles updating the platform status (run or stop).
 func (c *PlatformController) RunOrStopPlatformHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
@@ -66,24 +66,26 @@ func (c *PlatformController) RunOrStopPlatformHandler(w http.ResponseWriter, r *
 
 	var platform models.Platform
 
-	// Decodifica o corpo da requisição diretamente para o struct Platform
+	// Decode the request body directly into the Platform struct
 	if err := json.NewDecoder(r.Body).Decode(&platform); err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
 
-	// Atualiza o status da plataforma
+	// Update the platform status
 	err = c.service.RunOrStopPlatform(r.Context(), id, platform.Status)
 	if err != nil {
 		http.Error(w, "Failed to update platform status", http.StatusInternalServerError)
 		return
 	}
 
-	// Resposta de sucesso
-	w.WriteHeader(http.StatusNoContent)
+	// Success response
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message": "Platform Status updated successfully"}`))
 }
 
-// DeletePlatform deleta uma plataforma por ID.
+// DeletePlatform deletes a platform by ID.
 func (pc *PlatformController) DeletePlatform(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
@@ -98,10 +100,13 @@ func (pc *PlatformController) DeletePlatform(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"message": "Platform deleted successfully"}`))
+
 }
 
-// GetPlatformByID busca uma plataforma por ID.
+// GetPlatformByID retrieves a platform by ID.
 func (pc *PlatformController) GetPlatformByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])

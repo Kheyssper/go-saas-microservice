@@ -14,25 +14,25 @@ import (
 )
 
 func main() {
-	// Carrega a configuração
+	// Load configuration
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		log.Fatalf("Erro ao carregar a configuração: %v", err)
+		log.Fatalf("Error loading configuration: %v", err)
 	}
 
-	// Conecta ao banco de dados
+	// Connect to the database
 	dbPool, err := db.Connect(cfg.DatabaseURL)
 	if err != nil {
-		log.Fatalf("Erro ao conectar ao banco de dados: %v", err)
+		log.Fatalf("Error connecting to the database: %v", err)
 	}
 	defer dbPool.Close()
 
-	// Inicializa os repositórios, serviços e controladores
+	// Initialize repositories, services, and controllers
 	platformRepo := repositories.NewPlatformRepository(dbPool)
 	platformService := services.NewPlatformService(platformRepo)
 	platformController := controllers.NewPlatformController(platformService)
 
-	// Cria o roteador e define as rotas
+	// Create router and define routes
 	router := mux.NewRouter()
 	router.Use(middleware.LoggingMiddleware)
 
@@ -42,7 +42,7 @@ func main() {
 	router.HandleFunc("/platforms/{id:[0-9]+}/status", platformController.RunOrStopPlatformHandler).Methods("PUT")
 	router.HandleFunc("/platforms/{id:[0-9]+}", platformController.DeletePlatform).Methods("DELETE")
 
-	// Inicia o servidor HTTP
-	log.Printf("Iniciando o servidor na porta %s...", cfg.ServerPort)
+	// Start HTTP server
+	log.Printf("Starting server on port %s...", cfg.ServerPort)
 	log.Fatal(http.ListenAndServe(":"+cfg.ServerPort, router))
 }

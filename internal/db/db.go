@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-// Connect cria uma conexão com o banco de dados PostgreSQL
+// Connect creates connection with the PostgreSQL database
 func Connect(databaseURL string) (*pgxpool.Pool, error) {
 	config, err := pgxpool.ParseConfig(databaseURL)
 	if err != nil {

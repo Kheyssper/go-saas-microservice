@@ -6,45 +6,45 @@ import (
 	"github.com/kheyssper/go-saas-microservice/pkg/platform_service/repositories"
 )
 
-// PlatformService lida com a lógica de negócios da plataforma.
+// PlatformService handles business logic for platforms.
 type PlatformService struct {
 	repo *repositories.PlatformRepository
 }
 
-// NewPlatformService cria uma nova instância de PlatformService.
+// NewPlatformService creates a new instance of PlatformService.
 func NewPlatformService(repo *repositories.PlatformRepository) *PlatformService {
 	return &PlatformService{repo: repo}
 }
 
-// CreatePlatform cria uma nova plataforma.
+// CreatePlatform creates a new platform.
 func (s *PlatformService) CreatePlatform(ctx context.Context, platformName, platformSlug string, creatorID int) (*models.Platform, error) {
 	p := &models.Platform{
 		PlatformName: platformName,
 		PlatformSlug: platformSlug,
 		CreatorID:    creatorID,
-		Status:       "active", // status inicial
+		Status:       "active", // initial status
 
 	}
 	err := s.repo.Create(ctx, p)
 	return p, err
 }
 
-// ListPlatforms retorna todas as plataformas.
+// ListPlatforms returns all platforms.
 func (s *PlatformService) ListPlatforms(ctx context.Context) ([]models.Platform, error) {
 	return s.repo.FindAll(ctx)
 }
 
-// RunOrStopPlatform atualiza o status de uma plataforma.
+// RunOrStopPlatform updates the status of a platform.
 func (s *PlatformService) RunOrStopPlatform(ctx context.Context, id int, status string) error {
 	return s.repo.UpdateStatus(ctx, id, status)
 }
 
-// DeletePlatform deleta uma plataforma por ID.
+// DeletePlatform deletes a platform by ID.
 func (s *PlatformService) DeletePlatform(ctx context.Context, id int) error {
 	return s.repo.Delete(ctx, id)
 }
 
-// GetPlatformByID busca uma plataforma por ID.
+// GetPlatformByID retrieves a platform by ID.
 func (s *PlatformService) GetPlatformByID(ctx context.Context, id int) (*models.Platform, error) {
 	return s.repo.FindByID(ctx, id)
 }
