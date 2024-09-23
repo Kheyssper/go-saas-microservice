@@ -5,57 +5,58 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/kheyssper/go-saas-microservice/pkg/platform/models"
-	"github.com/kheyssper/go-saas-microservice/pkg/platform/services"
-
 	"github.com/gorilla/mux"
+	"github.com/kheyssper/go-saas-microservice/pkg/platform_service/models"
+	"github.com/kheyssper/go-saas-microservice/pkg/platform_service/services"
 )
 
 // PlatformController lida com as requisições HTTP relacionadas às plataformas.
 type PlatformController struct {
-	PlatformService *services.PlatformService
+	service *services.PlatformService
 }
 
-// NewPlatformController cria uma nova instância do PlatformController.
+// NewPlatformController cria uma nova instância de PlatformController.
 func NewPlatformController(service *services.PlatformService) *PlatformController {
-	return &PlatformController{
-		PlatformService: service,
-	}
+	return &PlatformController{service: service}
 }
 
-// CreatePlatform cria uma nova plataforma.
-func (pc *PlatformController) CreatePlatform(w http.ResponseWriter, r *http.Request) {
+// CreatePlatformHandler trata a criação de uma nova plataforma.
+func (c *PlatformController) CreatePlatformHandler(w http.ResponseWriter, r *http.Request) {
 	var platform models.Platform
-	err := json.NewDecoder(r.Body).Decode(&platform)
-	if err != nil {
-		http.Error(w, "Invalid input", http.StatusBadRequest)
+
+	// Decodifica o corpo da requisição diretamente para o struct Platform
+	if err := json.NewDecoder(r.Body).Decode(&platform); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
 
-	createdPlatform, err := pc.PlatformService.CreatePlatform(&platform)
+	// Chama o serviço para criar a plataforma
+	newPlatform, err := c.service.CreatePlatform(r.Context(), platform.PlatformName, platform.PlatformSlug, platform.CreatorID)
 	if err != nil {
-		http.Error(w, "Error creating platform", http.StatusInternalServerError)
+		http.Error(w, "Failed to create platform", http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(createdPlatform)
+	// Retorna a resposta em JSON
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(newPlatform)
 }
 
-// ListPlatforms lista todas as plataformas.
-func (pc *PlatformController) ListPlatforms(w http.ResponseWriter, r *http.Request) {
-	platforms, err := pc.PlatformService.ListPlatforms()
+// ListPlatformsHandler lida com a listagem de todas as plataformas.
+func (c *PlatformController) ListPlatformsHandler(w http.ResponseWriter, r *http.Request) {
+	platforms, err := c.service.ListPlatforms(r.Context())
 	if err != nil {
-		http.Error(w, "Error listing platforms", http.StatusInternalServerError)
+		http.Error(w, "Failed to list platforms", http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	// Retorna as plataformas em JSON
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(platforms)
 }
 
-// RunPlatform ativa uma plataforma específica.
-func (pc *PlatformController) RunPlatform(w http.ResponseWriter, r *http.Request) {
+// RunOrStopPlatformHandler lida com a atualização do status da plataforma (executar ou parar).
+func (c *PlatformController) RunOrStopPlatformHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -63,17 +64,27 @@ func (pc *PlatformController) RunPlatform(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err = pc.PlatformService.RunPlatform(id)
-	if err != nil {
-		http.Error(w, "Error running platform", http.StatusInternalServerError)
+	var platform models.Platform
+
+	// Decodifica o corpo da requisição diretamente para o struct Platform
+	if err := json.NewDecoder(r.Body).Decode(&platform); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	// Atualiza o status da plataforma
+	err = c.service.RunOrStopPlatform(r.Context(), id, platform.Status)
+	if err != nil {
+		http.Error(w, "Failed to update platform status", http.StatusInternalServerError)
+		return
+	}
+
+	// Resposta de sucesso
+	w.WriteHeader(http.StatusNoContent)
 }
 
-// StopPlatform desativa uma plataforma específica.
-func (pc *PlatformController) StopPlatform(w http.ResponseWriter, r *http.Request) {
+// DeletePlatform deleta uma plataforma por ID.
+func (pc *PlatformController) DeletePlatform(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -81,11 +92,29 @@ func (pc *PlatformController) StopPlatform(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	err = pc.PlatformService.StopPlatform(id)
+	err = pc.service.DeletePlatform(r.Context(), id)
 	if err != nil {
-		http.Error(w, "Error stopping platform", http.StatusInternalServerError)
+		http.Error(w, "Error deleting platform", http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// GetPlatformByID busca uma plataforma por ID.
+func (pc *PlatformController) GetPlatformByID(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, "Invalid platform ID", http.StatusBadRequest)
+		return
+	}
+
+	platform, err := pc.service.GetPlatformByID(r.Context(), id)
+	if err != nil {
+		http.Error(w, "Platform not found", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(platform)
 }
