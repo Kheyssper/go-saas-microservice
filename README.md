@@ -1,89 +1,65 @@
-# This project is under development
+# SAAS Microserice Platform Documentation
 
-<div align="center">
-<p><a href="https://github.com/go-saas/kit" target="_blank"><img src="https://github.com/go-saas/kit/blob/main/docs/static/img/logo.png?raw=true" width="100"></a></p>
-<span  style="font-weight: 800;font-size: 20px;">GO-SAAS-KIT </span> <span  style="font-weight: 800;font-size: 16px;">Starter kit for golang sass project</span>
-<br> 
-<a href="https://go-saas.github.io/kit/" target="_blank"><span  style="font-weight: 600;font-size: 18px;">docs</span></a>
-<br>
-</div>
-Overview
+## Overview
 
-![Overview](https://github.com/go-saas/kit/blob/main/docs/en-US/overview.png?raw=true)
+This microservice manages platforms for a Software as a Service (SaaS) application. It provides endpoints to create, list, and manage platforms, with access control for platform creators and administrators.
 
-# Architecture
-![Architecture](https://github.com/go-saas/kit/blob/main/docs/static/img/go-saas-kit.drawio.png?raw=true)
+## Environment Variables
 
-# Demo 
-
-address http://saas.nihaosaoya.com (Shanghai)
-
-- **Host** Username:admin  Password:123456
-
-
-# Feature
-
-* [x] Saas
-* [x] Modularity
-* [x] ACL(Access Control List), RBAC(Role-based Access Control)
-* [x] Localization
-* [x] Microservice/Monolithic compatible
-* [x] Distributed Eventbus: [kafka](https://kafka.apache.org/), [pulsar](https://pulsar.apache.org/)
-* [x] Cache (Redis)
-* [x] Background Job: [asynq](https://github.com/hibiken/asynq)
-* [x] Virtual File System: [vfs](https://github.com/goxiaoy/vfs)
-* [x] Distributed Transaction: [dtm](https://dtm.pub/)
-* [x] OpenId Connect: [ory](https://www.ory.sh/)
-* [x] Logging/Tracing
-
-
-# Modules
-* [x] User Management
-* [x] Tenant Management, Tenant Plans and Subscription
-* [x] Payments and Orders
-* [x] Product Management
-
-
-# Quick Start
-
-### For Microservice
+Before running the service, set the following environment variables in a `.env` file:
 
 ```
-docker compose -f docker-compose.yml -f docker-compose.ms.yml -f docker-compose.kafka.yml -f docker-compose.tracing.yml up -d
+POSTGRES_USER=your_username       # Database username
+POSTGRES_PASSWORD=your_password     # Database password
+POSTGRES_DB=saas_db                 # Database name
+POSTGRES_HOST=localhost              # Database host
+POSTGRES_PORT=5432                   # Database port
+SERVER_PORT=8080                     # Port for the HTTP server
 ```
 
-Or with build
+## Endpoints
+
+- **List All Platforms**
+  - **GET** `/platforms`
+  - Retrieves a list of all platforms.
+
+- **Create Platform**
+  - **POST** `/platforms`
+  - Creates a new platform. The request body should include:
+    ```json
+    {
+      "platform_name": "example_name",
+      "platform_slug": "example_slug",
+    "creator_id":id
+    }
+    ```
+
+- **Get Platform by ID**
+  - **GET** `/platforms/{id}`
+  - Retrieves a specific platform by its ID.
+
+- **Run/Stop Platform**
+  - **PUT** `/platforms/{id}/status`
+  - Updates the status of a specific platform.
+
+- **Delete Platform**
+  - **DELETE** `/platforms/{id}`
+  - Deletes a specific platform.
+
+## Database Migration Command
+
+To set up your database schema, run the following command, replacing placeholders with your actual PostgreSQL username and password:
+
+```bash
+psql -U your_username -d saas_db -f migrations/001_create_platforms_table.sql
 ```
-docker compose -f docker-compose.yml -f docker-compose.ms.yml -f docker-compose.kafka.yml  -f docker-compose.tracing.yml up -d --build
+
+## Running the Service
+
+To run the microservice, execute:
+
+```bash
+go run cmd/platform_service/main.go
 ```
 
-### Demo
-
-Open `http://localhost:80` to see the web ui
-
-Username: admin  
-Password: 123456
-
-
-# Development
-
-```shell
-make init
-```
-```shell
-make all
-```
-```shell
-make build
-```
-
-## Create New Service
-
-```shell
-kratos new <name> -r https://github.com/go-saas/kit-layout.git
-```
-
-
-Frontend Repo: https://github.com/go-saas/kit-frontend  
-Layout Repo( For creating new service): https://github.com/go-saas/kit-layout
-
+Ensure you have all environment variables set before starting the service.
