@@ -2,22 +2,36 @@ package db
 
 import (
 	"context"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"fmt"
 	"log"
+	"os"
+
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-// Connect creates connection with the PostgreSQL database
-func Connect(databaseURL string) (*pgxpool.Pool, error) {
-	config, err := pgxpool.ParseConfig(databaseURL)
+// SetupDB initializes the database connection using environment variables
+func SetupDB() (*pgxpool.Pool, error) {
+	// Get environment variables
+	user := os.Getenv("POSTGRES_USER")
+	password := os.Getenv("POSTGRES_PASSWORD")
+	dbName := os.Getenv("POSTGRES_DB")
+	host := os.Getenv("POSTGRES_HOST") // assuming you might also have a HOST variable
+	port := os.Getenv("POSTGRES_PORT") // if you need port number as well
+
+	// Construct the connection string
+	connStr := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s", user, password, host, port, dbName)
+
+	// Initialize connection pool
+	config, err := pgxpool.ParseConfig(connStr)
 	if err != nil {
 		return nil, err
 	}
 
-	dbPool, err := pgxpool.ConnectConfig(context.Background(), config)
+	pool, err := pgxpool.ConnectConfig(context.Background(), config)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Println("Conectado ao banco de dados com sucesso!")
-	return dbPool, nil
+	log.Println("Database connected successfully.")
+	return pool, nil
 }

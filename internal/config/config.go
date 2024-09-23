@@ -7,8 +7,12 @@ import (
 )
 
 type Config struct {
-	DatabaseURL string
-	ServerPort  string
+	PostgresUser     string
+	PostgresPassword string
+	PostgresDB       string
+	PostgresHost     string
+	PostgresPort     string
+	ServerPort       string
 }
 
 // LoadConfig loads environment variables
@@ -19,16 +23,20 @@ func LoadConfig() (*Config, error) {
 	}
 
 	return &Config{
-		DatabaseURL: getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/saas_db"),
-		ServerPort:  getEnv("SERVER_PORT", "8080"),
+		PostgresUser:     getEnv("POSTGRES_USER"),
+		PostgresPassword: getEnv("POSTGRES_PASSWORD"),
+		PostgresDB:       getEnv("POSTGRES_DB"),
+		PostgresHost:     getEnv("POSTGRES_HOST"),
+		PostgresPort:     getEnv("POSTGRES_PORT"),
+		ServerPort:       getEnv("SERVER_PORT"),
 	}, nil
 }
 
-// getEnv searches for the environment variable or returns the default value
-func getEnv(key, defaultValue string) string {
+// getEnv searches for the environment variable or returns an error if not found
+func getEnv(key string) string {
 	value := os.Getenv(key)
 	if value == "" {
-		return defaultValue
+		log.Fatalf("Environment variable %s not set", key)
 	}
 	return value
 }

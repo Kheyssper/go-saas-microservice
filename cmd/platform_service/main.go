@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 	"github.com/kheyssper/go-saas-microservice/internal/config"
 	"github.com/kheyssper/go-saas-microservice/internal/db"
 	"github.com/kheyssper/go-saas-microservice/internal/middleware"
@@ -14,14 +15,20 @@ import (
 )
 
 func main() {
+	// Load environment variables from the .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+	}
+
 	// Load configuration
-	cfg, err := config.LoadConfig()
+	cfg, err := config.LoadConfig() // Ensure your LoadConfig method reads from environment variables
 	if err != nil {
 		log.Fatalf("Error loading configuration: %v", err)
 	}
 
-	// Connect to the database
-	dbPool, err := db.Connect(cfg.DatabaseURL)
+	// Connect to the database using the SetupDB method
+	dbPool, err := db.SetupDB()
 	if err != nil {
 		log.Fatalf("Error connecting to the database: %v", err)
 	}
