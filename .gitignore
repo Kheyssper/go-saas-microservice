@@ -46,3 +46,5 @@ buf/*
 # Local config files
 *.local.yml
 *.local.yaml
+
+.env
